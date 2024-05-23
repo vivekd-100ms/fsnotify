@@ -17,6 +17,8 @@ import (
 	"unsafe"
 
 	"golang.org/x/sys/unix"
+
+	"github.com/fsnotify/fsnotify/internal"
 )
 
 // Watcher watches a set of paths, delivering events on a channel.
@@ -179,8 +181,10 @@ func (w *watches) add(ww *watch) {
 func (w *watches) remove(wd uint32) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
-	delete(w.path, w.wd[wd].path)
-	delete(w.wd, wd)
+	if v, ok := w.wd[wd]; ok {
+		delete(w.path, v.path)
+		delete(w.wd, wd)
+	}
 }
 
 func (w *watches) removePath(path string) (uint32, bool) {
